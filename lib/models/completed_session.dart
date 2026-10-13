@@ -10,8 +10,8 @@ class CompletedSession {
   // المبلغ الناتج عن الحساب التلقائي.
   final int calculatedAmount;
 
-  // المبلغ الذي اعتمده الموظف عند الإنهاء.
-  final int finalAmount;
+  // المبلغ المقبوض فعلياً من الزبون عند الإنهاء.
+  final int collectedAmount;
 
   // سبب التعديل اختياري.
   final String? adjustmentReason;
@@ -21,7 +21,7 @@ class CompletedSession {
     required this.endTime,
     required this.actualDuration,
     required this.calculatedAmount,
-    required this.finalAmount,
+    required this.collectedAmount,
     this.adjustmentReason,
   });
 }

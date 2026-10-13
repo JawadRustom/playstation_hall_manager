@@ -377,13 +377,13 @@ class _HomeScreenState extends State<HomeScreen> {
     );
   }
 
-  // إنهاء الجلسة مع حفظ المبلغ المحسوب والمبلغ المعتمد.
+  // إنهاء الجلسة مع حفظ المبلغ المحسوب والمبلغ المقبوض فعلياً.
   void endSession(
     int index,
     SessionModel session,
     DateTime endTime,
     int calculatedAmount,
-    int finalAmount,
+    int collectedAmount,
     String? adjustmentReason,
   ) {
     final playstation = playstations[index];
@@ -396,7 +396,7 @@ class _HomeScreenState extends State<HomeScreen> {
       session: session,
       endTime: endTime,
       calculatedAmount: calculatedAmount,
-      finalAmount: finalAmount,
+      collectedAmount: collectedAmount,
       adjustmentReason: adjustmentReason,
     );
 
@@ -423,7 +423,7 @@ class _HomeScreenState extends State<HomeScreen> {
       'PlayStation ${playstation.id}, '
       'Actual duration: ${formatDuration(actualDuration)}, '
       'Calculated amount: $calculatedAmount SYP, '
-      'Final amount: $finalAmount SYP, '
+      'Collected amount: $collectedAmount SYP, '
       'Reason: ${adjustmentReason ?? "None"}',
     );
   }
@@ -448,9 +448,9 @@ class _HomeScreenState extends State<HomeScreen> {
       actualDuration,
     );
 
-    // يبدأ المبلغ المعتمد مساوياً للمبلغ المحسوب.
+    // يبدأ المبلغ المقبوض فعلياً مساوياً للمبلغ المحسوب.
     // الموظف يستطيع تغييره عند الحاجة.
-    int? enteredFinalAmount = calculatedAmount;
+    int? enteredCollectedAmount = calculatedAmount;
 
     String adjustmentReason = '';
 
@@ -460,11 +460,11 @@ class _HomeScreenState extends State<HomeScreen> {
         return StatefulBuilder(
           builder: (context, setDialogState) {
             final amountIsValid =
-                enteredFinalAmount != null &&
-                enteredFinalAmount! >= 0;
+                enteredCollectedAmount != null &&
+                enteredCollectedAmount! >= 0;
 
             final amountWasChanged =
-                enteredFinalAmount != calculatedAmount;
+                enteredCollectedAmount != calculatedAmount;
 
             return AlertDialog(
               title: Text(
@@ -522,7 +522,7 @@ class _HomeScreenState extends State<HomeScreen> {
                       initialValue: calculatedAmount.toString(),
                       keyboardType: TextInputType.number,
                       decoration: InputDecoration(
-                        labelText: 'المبلغ النهائي المعتمد',
+                        labelText: 'المبلغ المقبوض فعلياً',
                         suffixText: 'ل.س',
                         border: const OutlineInputBorder(),
                         errorText: amountIsValid
@@ -531,7 +531,7 @@ class _HomeScreenState extends State<HomeScreen> {
                       ),
                       onChanged: (value) {
                         setDialogState(() {
-                          enteredFinalAmount = int.tryParse(value);
+                          enteredCollectedAmount = int.tryParse(value);
                         });
                       },
                     ),
@@ -582,7 +582,7 @@ class _HomeScreenState extends State<HomeScreen> {
                 ElevatedButton(
                   onPressed: amountIsValid
                       ? () {
-                          final finalAmount = enteredFinalAmount!;
+                          final collectedAmount = enteredCollectedAmount!;
 
                           final trimmedReason =
                               adjustmentReason.trim();
@@ -592,7 +592,7 @@ class _HomeScreenState extends State<HomeScreen> {
                             session,
                             endTime,
                             calculatedAmount,
-                            finalAmount,
+                            collectedAmount,
                             trimmedReason.isEmpty
                                 ? null
                                 : trimmedReason,

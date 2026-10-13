@@ -151,4 +151,78 @@ void main() {
       );
     });
   });
+
+  group('createCompletedSession', () {
+    final startTime = DateTime.utc(2026, 10, 13, 12);
+
+    SessionModel session() {
+      return SessionModel(
+        playstationId: 1,
+        playersCount: 3,
+        hourlyPrice: 12000,
+        startTime: startTime,
+        type: SessionType.open,
+        duration: null,
+      );
+    }
+
+    test('preserves the session snapshot, amounts, timestamps, and reason', () {
+      final testSession = session();
+      final endTime = startTime.add(const Duration(minutes: 30));
+
+      final completedSession = createCompletedSession(
+        session: testSession,
+        endTime: endTime,
+        calculatedAmount: 6000,
+        collectedAmount: 5500,
+        adjustmentReason: 'خصم للزبون',
+      );
+
+      expect(completedSession.session, same(testSession));
+      expect(completedSession.endTime, endTime);
+      expect(completedSession.actualDuration, const Duration(minutes: 30));
+      expect(completedSession.calculatedAmount, 6000);
+      expect(completedSession.collectedAmount, 5500);
+      expect(completedSession.adjustmentReason, 'خصم للزبون');
+    });
+
+    test('keeps equal calculated and collected amounts with no reason', () {
+      final completedSession = createCompletedSession(
+        session: session(),
+        endTime: startTime,
+        calculatedAmount: 0,
+        collectedAmount: 0,
+      );
+
+      expect(completedSession.calculatedAmount, 0);
+      expect(completedSession.collectedAmount, 0);
+      expect(completedSession.adjustmentReason, isNull);
+    });
+
+    test(
+      'keeps a collected amount above the calculated amount independent',
+      () {
+        final completedSession = createCompletedSession(
+          session: session(),
+          endTime: startTime.add(const Duration(hours: 1)),
+          calculatedAmount: 12000,
+          collectedAmount: 15000,
+        );
+
+        expect(completedSession.calculatedAmount, 12000);
+        expect(completedSession.collectedAmount, 15000);
+      },
+    );
+
+    test('clamps elapsed time when the session starts after the end time', () {
+      final completedSession = createCompletedSession(
+        session: session(),
+        endTime: startTime.subtract(const Duration(microseconds: 1)),
+        calculatedAmount: 0,
+        collectedAmount: 0,
+      );
+
+      expect(completedSession.actualDuration, Duration.zero);
+    });
+  });
 }

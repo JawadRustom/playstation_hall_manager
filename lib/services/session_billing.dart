@@ -40,7 +40,7 @@ CompletedSession createCompletedSession({
   required SessionModel session,
   required DateTime endTime,
   required int calculatedAmount,
-  required int finalAmount,
+  required int collectedAmount,
   String? adjustmentReason,
 }) {
   return CompletedSession(
@@ -51,7 +51,7 @@ CompletedSession createCompletedSession({
       endTime: endTime,
     ),
     calculatedAmount: calculatedAmount,
-    finalAmount: finalAmount,
+    collectedAmount: collectedAmount,
     adjustmentReason: adjustmentReason,
   );
 }
