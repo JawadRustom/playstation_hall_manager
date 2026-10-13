@@ -132,8 +132,8 @@ implementing missing authorization, audit, persistence, or operational rules.
       beyond a timed plan is billed from the supplied actual duration.
 - [ ] At a rate of `10,000` SYP/hour, expected examples include: `0 us -> 0`,
       `1 us -> 0`, `179 us -> 0`, `180 us -> 0`, `359 us -> 0`,
-      `360 us -> 1`, `1 second -> 2`, `30 minutes -> 5,000`, and
-      `1 hour -> 10,000` SYP.
+      `360 us -> 0`, `359 ms -> 0`, `360 ms -> 1`, `1 second -> 2`,
+      `30 minutes -> 5,000`, and `1 hour -> 10,000` SYP.
 - [ ] At a rate of `3,600` SYP/hour, explicit duration examples prove the
       approved policy: `240.2 seconds -> 240`, `240.5 seconds -> 240`,
       `240.9 seconds -> 240`, and `241.9 seconds -> 241` SYP.
@@ -313,7 +313,7 @@ platform project file is expected to change.
 | Risk | Mitigation | Rollback or recovery |
 | --- | --- | --- |
 | Extraction changes more than the separately approved truncation correction or alters a timestamp boundary. | Move the current formula first, then make the single integer-arithmetic correction under explicit implementation approval; compare the focused diff and exact boundary tests. | Revert the extraction/call-site changes and restore the prior inline code; do not describe the restored half-up behavior as policy-compliant. |
-| Tests accidentally retain half-up expectations or miss fractions close to the next pound. | Assert the approved examples plus `180 us -> 0`, `359 us -> 0`, and `360 us -> 1` at 10,000 SYP/hour. | Correct the expectations to truncation; never change the approved formula merely to satisfy obsolete tests. |
+| Tests accidentally retain half-up expectations or miss fractions close to the next pound. | Assert the approved examples plus `180 us -> 0`, `359 us -> 0`, `360 us -> 0`, `359 ms -> 0`, and `360 ms -> 1` at 10,000 SYP/hour. | Correct the expectations to truncation; never change the approved formula merely to satisfy obsolete tests. |
 | Renaming `finalAmount` to `collectedAmount` is treated as cosmetic and downstream cash semantics are lost. | Assert separate fields and differing values, document `collectedAmount` as the cash source, and search changed session code/tests for stale terminology. | Restore the last reviewed code, then reapply the rename coherently after reviewing every consumer; persisted migration remains out of scope. |
 | Wall-clock/timer use makes widget tests flaky or leaves periodic timers pending. | Advance time through the Flutter test binding, avoid real waits, and explicitly dispose `HomeScreen` at each test's end. | Narrow unstable tests to pure explicit-time coverage while documenting the UI gap; do not add a clock dependency without approval. |
 | Private widget state prevents direct verification of completed records. | Test record construction through the extracted pure boundary and UI transitions through public widget behavior; do not expose private state solely for tests. | Remove any unnecessary test-only API and retain black-box widget plus pure unit coverage. |

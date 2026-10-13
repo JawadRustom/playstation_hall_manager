@@ -33,8 +33,7 @@ int calculateSessionCharge(SessionModel session, Duration actualDuration) {
 
   const microsecondsPerHour = Duration.microsecondsPerHour;
 
-  return ((hourlyPrice * actualMicroseconds) + (microsecondsPerHour ~/ 2)) ~/
-      microsecondsPerHour;
+  return (hourlyPrice * actualMicroseconds) ~/ microsecondsPerHour;
 }
 
 CompletedSession createCompletedSession({
