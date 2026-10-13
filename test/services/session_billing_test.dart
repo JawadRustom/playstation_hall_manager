@@ -22,6 +22,18 @@ void main() {
         expect(selectHourlyPrice(playstation, entry.key), entry.value);
       });
     }
+
+    test('returns zero for unsupported player counts', () {
+      const unsupportedPlayerCounts = [0, 1, 5];
+
+      for (final playersCount in unsupportedPlayerCounts) {
+        expect(
+          selectHourlyPrice(playstation, playersCount),
+          0,
+          reason: '$playersCount players is unsupported',
+        );
+      }
+    });
   });
 
   group('calculateElapsedDuration', () {

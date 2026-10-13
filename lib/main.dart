@@ -1,4 +1,3 @@
-
 import 'dart:async';
 
 import 'package:flutter/material.dart';
@@ -23,9 +22,7 @@ class PlayStationApp extends StatelessWidget {
       debugShowCheckedModeBanner: false,
       title: 'PlayStation Hall Manager',
       theme: ThemeData(
-        colorScheme: ColorScheme.fromSeed(
-          seedColor: Colors.deepPurple,
-        ),
+        colorScheme: ColorScheme.fromSeed(seedColor: Colors.deepPurple),
         useMaterial3: true,
       ),
       home: HomeScreen(clock: clock),
@@ -94,16 +91,13 @@ class _HomeScreenState extends State<HomeScreen> {
   void initState() {
     super.initState();
 
-    _timer = Timer.periodic(
-      const Duration(seconds: 1),
-      (_) {
-        if (!mounted || activeSessions.isEmpty) {
-          return;
-        }
+    _timer = Timer.periodic(const Duration(seconds: 1), (_) {
+      if (!mounted || activeSessions.isEmpty) {
+        return;
+      }
 
-        setState(() {});
-      },
-    );
+      setState(() {});
+    });
   }
 
   @override
@@ -112,10 +106,7 @@ class _HomeScreenState extends State<HomeScreen> {
     super.dispose();
   }
 
-  int getHourlyPrice(
-    PlayStationModel playstation,
-    int playersCount,
-  ) {
+  int getHourlyPrice(PlayStationModel playstation, int playersCount) {
     return selectHourlyPrice(playstation, playersCount);
   }
 
@@ -151,10 +142,7 @@ class _HomeScreenState extends State<HomeScreen> {
       return;
     }
 
-    final hourlyPrice = getHourlyPrice(
-      playstation,
-      playersCount,
-    );
+    final hourlyPrice = getHourlyPrice(playstation, playersCount);
 
     setState(() {
       activeSessions[playstation.id] = SessionModel(
@@ -206,10 +194,7 @@ class _HomeScreenState extends State<HomeScreen> {
       builder: (dialogContext) {
         return StatefulBuilder(
           builder: (context, setDialogState) {
-            final hourlyPrice = getHourlyPrice(
-              playstation,
-              selectedPlayers,
-            );
+            final hourlyPrice = getHourlyPrice(playstation, selectedPlayers);
 
             return AlertDialog(
               title: Text('فتح جلسة - ${playstation.name}'),
@@ -231,18 +216,9 @@ class _HomeScreenState extends State<HomeScreen> {
                       },
                       child: const Column(
                         children: [
-                          RadioListTile<int>(
-                            title: Text('شخصين'),
-                            value: 2,
-                          ),
-                          RadioListTile<int>(
-                            title: Text('3 لاعبين'),
-                            value: 3,
-                          ),
-                          RadioListTile<int>(
-                            title: Text('4 لاعبين'),
-                            value: 4,
-                          ),
+                          RadioListTile<int>(title: Text('شخصين'), value: 2),
+                          RadioListTile<int>(title: Text('3 لاعبين'), value: 3),
+                          RadioListTile<int>(title: Text('4 لاعبين'), value: 4),
                         ],
                       ),
                     ),
@@ -288,8 +264,7 @@ class _HomeScreenState extends State<HomeScreen> {
                                 border: OutlineInputBorder(),
                               ),
                               onChanged: (value) {
-                                selectedHours =
-                                    int.tryParse(value) ?? 0;
+                                selectedHours = int.tryParse(value) ?? 0;
                               },
                             ),
                           ),
@@ -305,8 +280,7 @@ class _HomeScreenState extends State<HomeScreen> {
                                 border: OutlineInputBorder(),
                               ),
                               onChanged: (value) {
-                                selectedMinutes =
-                                    int.tryParse(value) ?? 0;
+                                selectedMinutes = int.tryParse(value) ?? 0;
                               },
                             ),
                           ),
@@ -345,9 +319,7 @@ class _HomeScreenState extends State<HomeScreen> {
                           selectedMinutes < 0 ||
                           selectedMinutes > 59 ||
                           totalMinutes <= 0) {
-                        ScaffoldMessenger.of(
-                          dialogContext,
-                        ).showSnackBar(
+                        ScaffoldMessenger.of(dialogContext).showSnackBar(
                           const SnackBar(
                             content: Text(
                               'أدخل مدة صحيحة أكبر من صفر، '
@@ -359,9 +331,7 @@ class _HomeScreenState extends State<HomeScreen> {
                         return;
                       }
 
-                      sessionDuration = Duration(
-                        minutes: totalMinutes,
-                      );
+                      sessionDuration = Duration(minutes: totalMinutes);
                     }
 
                     startSession(
@@ -449,10 +419,7 @@ class _HomeScreenState extends State<HomeScreen> {
       endTime: endTime,
     );
 
-    final calculatedAmount = calculateSessionCharge(
-      session,
-      actualDuration,
-    );
+    final calculatedAmount = calculateSessionCharge(session, actualDuration);
 
     // يبدأ المبلغ المقبوض فعلياً مساوياً للمبلغ المحسوب.
     // الموظف يستطيع تغييره عند الحاجة.
@@ -466,16 +433,12 @@ class _HomeScreenState extends State<HomeScreen> {
         return StatefulBuilder(
           builder: (context, setDialogState) {
             final amountIsValid =
-                enteredCollectedAmount != null &&
-                enteredCollectedAmount! >= 0;
+                enteredCollectedAmount != null && enteredCollectedAmount! >= 0;
 
-            final amountWasChanged =
-                enteredCollectedAmount != calculatedAmount;
+            final amountWasChanged = enteredCollectedAmount != calculatedAmount;
 
             return AlertDialog(
-              title: Text(
-                'إنهاء جلسة - ${playstation.name}',
-              ),
+              title: Text('إنهاء جلسة - ${playstation.name}'),
               content: SingleChildScrollView(
                 child: Column(
                   mainAxisSize: MainAxisSize.min,
@@ -488,38 +451,28 @@ class _HomeScreenState extends State<HomeScreen> {
 
                     const SizedBox(height: 8),
 
-                    Text(
-                      'عدد اللاعبين: ${session.playersCount}',
-                    ),
+                    Text('عدد اللاعبين: ${session.playersCount}'),
 
                     const SizedBox(height: 8),
 
-                    Text(
-                      'المدة الفعلية: ${formatDuration(actualDuration)}',
-                    ),
+                    Text('المدة الفعلية: ${formatDuration(actualDuration)}'),
 
                     const SizedBox(height: 8),
 
-                    Text(
-                      'سعر الساعة: ${session.hourlyPrice} ل.س',
-                    ),
+                    Text('سعر الساعة: ${session.hourlyPrice} ل.س'),
 
                     const Divider(height: 32),
 
                     const Text(
                       'المبلغ المحسوب تلقائياً',
-                      style: TextStyle(
-                        fontWeight: FontWeight.bold,
-                      ),
+                      style: TextStyle(fontWeight: FontWeight.bold),
                     ),
 
                     const SizedBox(height: 8),
 
                     Text(
                       '$calculatedAmount ل.س',
-                      style: const TextStyle(
-                        fontSize: 20,
-                      ),
+                      style: const TextStyle(fontSize: 20),
                     ),
 
                     const SizedBox(height: 20),
@@ -570,9 +523,7 @@ class _HomeScreenState extends State<HomeScreen> {
                     if (!amountWasChanged)
                       const Text(
                         'المبلغ المعتمد مطابق للحساب التلقائي.',
-                        style: TextStyle(
-                          color: Colors.green,
-                        ),
+                        style: TextStyle(color: Colors.green),
                       ),
                   ],
                 ),
@@ -590,8 +541,7 @@ class _HomeScreenState extends State<HomeScreen> {
                       ? () {
                           final collectedAmount = enteredCollectedAmount!;
 
-                          final trimmedReason =
-                              adjustmentReason.trim();
+                          final trimmedReason = adjustmentReason.trim();
 
                           endSession(
                             index,
@@ -599,9 +549,7 @@ class _HomeScreenState extends State<HomeScreen> {
                             endTime,
                             calculatedAmount,
                             collectedAmount,
-                            trimmedReason.isEmpty
-                                ? null
-                                : trimmedReason,
+                            trimmedReason.isEmpty ? null : trimmedReason,
                           );
 
                           Navigator.pop(dialogContext);
@@ -623,10 +571,7 @@ class _HomeScreenState extends State<HomeScreen> {
     if (session.type == SessionType.open) {
       return Text(
         'الوقت المنقضي: ${formatDuration(elapsed)}',
-        style: const TextStyle(
-          color: Colors.blue,
-          fontWeight: FontWeight.bold,
-        ),
+        style: const TextStyle(color: Colors.blue, fontWeight: FontWeight.bold),
       );
     }
 
@@ -641,10 +586,7 @@ class _HomeScreenState extends State<HomeScreen> {
     if (remaining <= Duration.zero) {
       return const Text(
         'انتهى الوقت — بانتظار الإنهاء أو التمديد',
-        style: TextStyle(
-          color: Colors.red,
-          fontWeight: FontWeight.bold,
-        ),
+        style: TextStyle(color: Colors.red, fontWeight: FontWeight.bold),
       );
     }
 
@@ -678,16 +620,11 @@ class _HomeScreenState extends State<HomeScreen> {
             child: ListTile(
               contentPadding: const EdgeInsets.all(16),
 
-              leading: const Icon(
-                Icons.sports_esports,
-                size: 32,
-              ),
+              leading: const Icon(Icons.sports_esports, size: 32),
 
               title: Text(
                 playstation.name,
-                style: const TextStyle(
-                  fontWeight: FontWeight.bold,
-                ),
+                style: const TextStyle(fontWeight: FontWeight.bold),
               ),
 
               subtitle: Column(
@@ -696,9 +633,7 @@ class _HomeScreenState extends State<HomeScreen> {
                   const SizedBox(height: 8),
 
                   Text(
-                    playstation.isAvailable
-                        ? 'متاح للعب'
-                        : 'مشغول',
+                    playstation.isAvailable ? 'متاح للعب' : 'مشغول',
                     style: TextStyle(
                       color: playstation.isAvailable
                           ? Colors.green
@@ -709,28 +644,18 @@ class _HomeScreenState extends State<HomeScreen> {
 
                   const SizedBox(height: 8),
 
-                  Text(
-                    'شخصين: ${playstation.priceForTwo} ل.س',
-                  ),
+                  Text('شخصين: ${playstation.priceForTwo} ل.س'),
 
-                  Text(
-                    '3 لاعبين: ${playstation.priceForThree} ل.س',
-                  ),
+                  Text('3 لاعبين: ${playstation.priceForThree} ل.س'),
 
-                  Text(
-                    '4 لاعبين: ${playstation.priceForFour} ل.س',
-                  ),
+                  Text('4 لاعبين: ${playstation.priceForFour} ل.س'),
 
                   if (session != null) ...[
                     const SizedBox(height: 12),
 
-                    Text(
-                      'عدد اللاعبين: ${session.playersCount}',
-                    ),
+                    Text('عدد اللاعبين: ${session.playersCount}'),
 
-                    Text(
-                      'سعر ساعة الجلسة: ${session.hourlyPrice} ل.س',
-                    ),
+                    Text('سعر ساعة الجلسة: ${session.hourlyPrice} ل.س'),
 
                     const SizedBox(height: 8),
 
@@ -740,32 +665,19 @@ class _HomeScreenState extends State<HomeScreen> {
 
                     OutlinedButton.icon(
                       onPressed: () {
-                        showEndSessionDialog(
-                          context,
-                          index,
-                          session,
-                        );
+                        showEndSessionDialog(context, index, session);
                       },
-                      icon: const Icon(
-                        Icons.stop_circle_outlined,
-                      ),
+                      icon: const Icon(Icons.stop_circle_outlined),
                       label: const Text('إنهاء الجلسة'),
                     ),
                   ],
                 ],
               ),
 
-              trailing: const Icon(
-                Icons.arrow_forward_ios,
-                size: 16,
-              ),
+              trailing: const Icon(Icons.arrow_forward_ios, size: 16),
 
               onTap: () {
-                showStartSessionDialog(
-                  context,
-                  index,
-                  playstation,
-                );
+                showStartSessionDialog(context, index, playstation);
               },
             ),
           );

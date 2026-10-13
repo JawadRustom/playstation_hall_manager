@@ -6,17 +6,29 @@
 
 ## Current Development Phase
 
-The project is in an early functional-prototype phase. The core start/end session interaction and charge calculation can be exercised in memory, but the test baseline is broken and the application is not yet ready for persistent or multi-user operation.
+The core start/end workflow, timer presentation, billing calculation, and
+collection entry are implemented and protected by a passing automated test
+baseline. Implementation plan `001` is completed: all applicable acceptance
+criteria pass, including unsupported-player-count coverage and formatter
+verification.
 
 ## Implemented Features
 
 - Displays four hard-coded PlayStation devices with availability and hourly prices for two, three, or four players.
 - Starts either a timed session (hours and minutes) or an open session for an available device.
 - Stores the selected player count, hourly price, start time, session type, and optional planned duration in memory.
-- Updates elapsed or remaining time every second while sessions are active and marks an expired timed session in the UI.
-- Ends a session manually and calculates its charge from actual elapsed microseconds. The current formula rounds the monetary result to the nearest whole Syrian pound using positive half-up behavior; this does not match the approved truncation policy below.
-- Allows a non-negative integer `finalAmount` to override the calculated charge and records an optional adjustment reason. The current prototype does not use the approved `collectedAmount` name, restrict this action by user role, or record the responsible operator.
-- Preserves `calculatedAmount` and the current `finalAmount` as separate fields in each in-memory completed-session record. The approved accounting meaning and field name for the latter are `collectedAmount`.
+- Uses an optional injected clock in `PlayStationApp` and `HomeScreen` for
+  deterministic session start, elapsed-time, and end-dialog timestamps; normal
+  application use still defaults to `DateTime.now`.
+- Updates elapsed or remaining time every second while sessions are active. An
+  expired timed session stays active until an operator ends it manually.
+- Ends a session manually and calculates its charge from actual elapsed
+  microseconds with no minimum duration or duration rounding. Integer division
+  discards every fractional Syrian pound instead of rounding it up.
+- Accepts any non-negative integer, including zero, as `collectedAmount` and
+  records an optional trimmed adjustment reason.
+- Preserves `calculatedAmount` and `collectedAmount` as separate fields in each
+  in-memory completed-session record.
 - Keeps completed-session details in memory for the lifetime of the `HomeScreen` state.
 - Preserves Arabic UI strings as UTF-8.
 
@@ -37,30 +49,70 @@ The following rules are approved requirements, not pending decisions:
 - A difference between calculated and collected amounts does not automatically create a debt.
 - These rules apply to gaming-session accounting only.
 
-The in-memory prototype implements actual-duration billing, accepts a non-negative integer override and optional reason, and keeps two amounts in memory. It does not implement monetary truncation: its current positive half-up formula can produce a value one pound higher than the approved result. It also uses `finalAmount` rather than `collectedAmount`, has no receipt/report consumers, does not implement users or roles, and does not record a responsible operator or distinct collection timestamp. Production changes to the financial formula, completion model, UI terminology, or downstream accounting require separate approval through the proposed implementation plan before code is changed.
+The in-memory prototype implements the billing, collection-name, integer-entry,
+optional-reason, and separate-amount rules. It does not yet implement identity,
+authorization, collection audit metadata, persistence, or cash reporting.
 
-## Incomplete or Planned Features
+## Outstanding Requirements
 
-- Firebase Authentication, Firestore, Cloud Functions, and all persistent storage are planned in `AGENTS.md` but are not implemented.
-- Completed sessions are collected but have no history, reporting, export, or review UI.
+- Firebase Authentication and persistence remain unimplemented. Any Firebase
+  configuration, schema, rule, Function, migration, emulator, or deployment
+  work requires separate approval.
 - Role-based authorization for administrators and employees is not implemented.
-- The approved monetary truncation formula is not implemented; the current calculation rounds positive half-pound and larger fractions up.
-- The completed-session model still uses `finalAmount`; migration to the approved `collectedAmount` meaning and name is not implemented.
-- Collection audit data is incomplete: the responsible operator and a distinct collection timestamp are not recorded.
-- Cash-based reporting does not exist, so `collectedAmount` is not yet consumed as the receipt/reporting source.
-- Device inventory, availability, controller counts, and player-based prices are not configurable; they are hard-coded in `lib/main.dart`.
-- Timed sessions do not auto-end, notify externally, or provide the extension action mentioned by the expiry message.
-- User accounts, staff roles/permissions, operational reporting, and other production modules are not present. Their exact scope is unverified.
-- Explicit application-wide RTL/localization configuration is not present; runtime behavior across supported platforms is unverified.
+- Completed sessions do not record the responsible operator or a distinct
+  collection timestamp; `endTime` is not a substitute for collection audit
+  time.
+- Cash reporting is not implemented. Future cash reports must use
+  `collectedAmount`, not `calculatedAmount`.
+- Timed and open session extensions are not implemented. For a timed extension,
+  a positive operator-selected duration must be added to the previous scheduled
+  expiration, not to the instant the extension button is pressed. Extending an
+  open session must preserve its original start timestamp.
+- Background or lock-screen expiry alarms and notifications are not
+  implemented. Stopping an expiry alarm must not automatically end or pause the
+  session. Cross-platform alarm capability must not be claimed until platform
+  restrictions have been evaluated.
+- Arabic/English localization and mixed-direction text handling are not
+  implemented as an application-wide system.
+- Light and dark themes are not implemented as selectable application themes.
+- Completed sessions have no history, reporting, export, or review UI.
+- Device inventory, availability, controller counts, and player-based prices
+  remain hard-coded in `lib/main.dart`.
+
+## Verification Status
+
+Step 7 verification on `2026-10-13` produced these results:
+
+- `flutter test --no-pub test/widget_test.dart`: passed (`1` test).
+- `flutter test --no-pub test/services/session_billing_test.dart`: passed
+  (`17` tests), including unsupported player counts returning zero.
+- `flutter test --no-pub test/session_lifecycle_widget_test.dart`: passed
+  (`18` tests).
+- `flutter analyze --no-pub`: passed with no issues.
+- `flutter test --no-pub`: passed (`36` tests).
+- `git diff --check`: passed before and after documentation reconciliation.
+- `git status --short`: contains only the four expected approved changes on
+  `develop`.
+- The complete non-writing Dart format check passed for all six changed or
+  relevant Dart files with zero changes required.
+
+The obsolete `MyApp` counter test failure is resolved. The smoke test now pumps
+`PlayStationApp`, checks the Arabic title and four configured devices, and
+disposes the widget. Billing and lifecycle tests cover the implemented billing,
+collection, validation, deterministic timer, expiry, and manual-end behavior.
+
+The repository owner reports real-device testing during Steps 2–5. That record
+is historical user-reported evidence; Step 7 did not perform a new live-device
+runtime test. The final automated verification and scope review satisfy plan
+`001`, which is now completed.
 
 ## Known Issues and Technical Debt
 
-- `test/widget_test.dart` is the untouched counter-app scaffold test. It references the nonexistent `MyApp` class, so both `flutter analyze --no-pub` and `flutter test --no-pub` fail before any useful test runs.
-- There are no tests protecting session transitions, input boundaries, timers, price selection, monetary truncation, integer-only collection values, or calculated-versus-collected amounts.
-- UI, mutable state, clock access, billing logic, and the `CompletedSession` record are combined in `lib/main.dart`, which makes financially significant behavior difficult to test in isolation.
 - `controllersCount` is stored but not displayed or enforced; every device currently offers two-, three-, and four-player sessions even when its controller count is lower.
 - PlayStation 2 starts as unavailable without a corresponding active session, and the UI provides no way to change that state.
 - Timed-session duration affects only the countdown display. Charges use total actual elapsed time, including time after the planned duration, until an operator manually ends the session.
+- UI state and session lifecycle ownership remain in `HomeScreen`; only the
+  completion value and pure billing functions have been extracted.
 - The generated README still describes a generic new Flutter project.
 
 ## Pending Architectural Decisions
@@ -69,22 +121,29 @@ The approved business requirements above are settled. The following technical an
 
 - Persistence and backend boundaries, including whether and how Firebase services will be introduced.
 - Authentication implementation, staff-role representation, authorization enforcement, and audit-storage design.
-- State ownership and separation of UI, session lifecycle, clock, and billing logic.
-- Whether a timed-session extension starts from the original expiration time or from the moment the extension is requested.
+- State ownership and any broader separation of UI and session lifecycle logic.
+- Platform-specific restrictions and delivery guarantees for background or
+  lock-screen alarms and notifications.
 - How overtime is handled operationally after a timed session expires.
 - Rules connecting controller capacity, player count, and device availability.
-- Supported locales and the required application-wide RTL behavior.
+- Localization architecture, supported Arabic/English content, mixed-direction
+  text handling, and light/dark theme design.
 
 ## Current Priorities
 
-1. Obtain approval for and implement the narrowly scoped correction from current half-up calculation to the approved truncation policy while restoring a truthful passing test baseline.
-2. Protect the approved billing and collection requirements with focused deterministic tests, including fractional-result boundaries and integer-only display/input cases.
-3. Resolve the two outstanding timed-session extension and overtime questions before implementing those workflows.
-4. Prepare an approved implementation plan before introducing persistence, authentication, Firebase, or project-wide architectural changes.
+1. Treat the completed test baseline as the regression foundation for future
+   work.
+2. Scope the outstanding authentication, persistence, authorization, audit,
+   reporting, extension/alarm, localization, and theming requirements before
+   implementation.
+3. Keep future financial, persistence, security, and architectural work behind
+   separately approved implementation plans.
 
 ## Next Task
 
-After `docs/plans/001-test-baseline.md` is reviewed and approved, replace the stale counter widget test, correct the production billing formula to discard every fractional Syrian pound, adopt `calculatedAmount`/`collectedAmount` terminology, and add focused tests for no minimum duration, actual elapsed time, truncation, integer-only monetary display/input, separate amounts, optional reason, and start/end behavior. Record authorization, operator/timestamp audit, and future cash-report integration as follow-up work. Do not change production code before separate implementation approval.
+Select and approve the next product milestone separately. This status update
+does not start a feature, choose among the outstanding priorities, or authorize
+production changes beyond the completed plan `001` scope.
 
 ## Git Workflow
 
@@ -93,5 +152,5 @@ After `docs/plans/001-test-baseline.md` is reviewed and approved, replace the st
 - `AGENTS.md` defines Codex as the primary development agent; Antigravity may continue only through an explicit handoff, and development is sequential unless the user directs otherwise.
 - Existing uncommitted and untracked files are user-owned and must be preserved.
 - No commit, push, merge, rebase, reset, branch change/creation, amend, or Git configuration change may be performed without explicit user approval.
-- At the start of this policy-documentation update, the proposed plan was
-  already untracked and no other working-tree changes were present.
+- Final plan `001` closure preserves the approved documentation updates, focused
+  unsupported-count test, and mechanical `lib/main.dart` formatting change.
