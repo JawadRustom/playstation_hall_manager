@@ -166,25 +166,29 @@ void main() {
       );
     }
 
-    test('preserves the session snapshot, amounts, timestamps, and reason', () {
-      final testSession = session();
-      final endTime = startTime.add(const Duration(minutes: 30));
+    test(
+      'preserves the session snapshot, amounts, timestamps, and trimmed reason',
+      () {
+        final testSession = session();
+        final endTime = startTime.add(const Duration(minutes: 30));
+        final trimmedReason = '  خصم للزبون  '.trim();
 
-      final completedSession = createCompletedSession(
-        session: testSession,
-        endTime: endTime,
-        calculatedAmount: 6000,
-        collectedAmount: 5500,
-        adjustmentReason: 'خصم للزبون',
-      );
+        final completedSession = createCompletedSession(
+          session: testSession,
+          endTime: endTime,
+          calculatedAmount: 6000,
+          collectedAmount: 5500,
+          adjustmentReason: trimmedReason,
+        );
 
-      expect(completedSession.session, same(testSession));
-      expect(completedSession.endTime, endTime);
-      expect(completedSession.actualDuration, const Duration(minutes: 30));
-      expect(completedSession.calculatedAmount, 6000);
-      expect(completedSession.collectedAmount, 5500);
-      expect(completedSession.adjustmentReason, 'خصم للزبون');
-    });
+        expect(completedSession.session, same(testSession));
+        expect(completedSession.endTime, endTime);
+        expect(completedSession.actualDuration, const Duration(minutes: 30));
+        expect(completedSession.calculatedAmount, 6000);
+        expect(completedSession.collectedAmount, 5500);
+        expect(completedSession.adjustmentReason, 'خصم للزبون');
+      },
+    );
 
     test('keeps equal calculated and collected amounts with no reason', () {
       final completedSession = createCompletedSession(
@@ -196,6 +200,21 @@ void main() {
 
       expect(completedSession.calculatedAmount, 0);
       expect(completedSession.collectedAmount, 0);
+      expect(completedSession.adjustmentReason, isNull);
+    });
+
+    test('preserves a normalized whitespace-only reason as absent', () {
+      const rawReason = '   ';
+      final trimmedReason = rawReason.trim();
+
+      final completedSession = createCompletedSession(
+        session: session(),
+        endTime: startTime,
+        calculatedAmount: 0,
+        collectedAmount: 0,
+        adjustmentReason: trimmedReason.isEmpty ? null : trimmedReason,
+      );
+
       expect(completedSession.adjustmentReason, isNull);
     });
 
