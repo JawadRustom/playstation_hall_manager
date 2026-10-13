@@ -3,8 +3,10 @@ import 'dart:async';
 
 import 'package:flutter/material.dart';
 
+import 'models/completed_session.dart';
 import 'models/playstation_model.dart';
 import 'models/session_model.dart';
+import 'services/session_billing.dart';
 
 void main() {
   runApp(const PlayStationApp());
@@ -27,32 +29,6 @@ class PlayStationApp extends StatelessWidget {
       home: const HomeScreen(),
     );
   }
-}
-
-// بيانات الجلسة بعد إنهائها.
-// حالياً بتنحفظ بذاكرة التطبيق فقط.
-class CompletedSession {
-  final SessionModel session;
-  final DateTime endTime;
-  final Duration actualDuration;
-
-  // المبلغ الناتج عن الحساب التلقائي.
-  final int calculatedAmount;
-
-  // المبلغ الذي اعتمده الموظف عند الإنهاء.
-  final int finalAmount;
-
-  // سبب التعديل اختياري.
-  final String? adjustmentReason;
-
-  const CompletedSession({
-    required this.session,
-    required this.endTime,
-    required this.actualDuration,
-    required this.calculatedAmount,
-    required this.finalAmount,
-    this.adjustmentReason,
-  });
 }
 
 class HomeScreen extends StatefulWidget {
@@ -134,19 +110,7 @@ class _HomeScreenState extends State<HomeScreen> {
     PlayStationModel playstation,
     int playersCount,
   ) {
-    switch (playersCount) {
-      case 2:
-        return playstation.priceForTwo;
-
-      case 3:
-        return playstation.priceForThree;
-
-      case 4:
-        return playstation.priceForFour;
-
-      default:
-        return 0;
-    }
+    return selectHourlyPrice(playstation, playersCount);
   }
 
   String formatDuration(Duration duration) {
@@ -162,29 +126,10 @@ class _HomeScreenState extends State<HomeScreen> {
   }
 
   Duration getElapsedTime(SessionModel session) {
-    final elapsed = DateTime.now().difference(session.startTime);
-
-    return elapsed.isNegative ? Duration.zero : elapsed;
-  }
-
-  // الحساب حسب الوقت الفعلي دون تقريب الوقت أو حد أدنى.
-  // يتم تقريب المبلغ المالي فقط لأقرب ليرة.
-  int calculateSessionAmount(
-    SessionModel session,
-    Duration actualDuration,
-  ) {
-    if (actualDuration <= Duration.zero) {
-      return 0;
-    }
-
-    final hourlyPrice = session.hourlyPrice;
-    final actualMicroseconds = actualDuration.inMicroseconds;
-
-    const microsecondsPerHour = Duration.microsecondsPerHour;
-
-    return ((hourlyPrice * actualMicroseconds) +
-            (microsecondsPerHour ~/ 2)) ~/
-        microsecondsPerHour;
+    return calculateElapsedDuration(
+      startTime: session.startTime,
+      endTime: DateTime.now(),
+    );
   }
 
   void startSession(
@@ -447,19 +392,15 @@ class _HomeScreenState extends State<HomeScreen> {
       return;
     }
 
-    final elapsed = endTime.difference(session.startTime);
-
-    final actualDuration =
-        elapsed.isNegative ? Duration.zero : elapsed;
-
-    final completedSession = CompletedSession(
+    final completedSession = createCompletedSession(
       session: session,
       endTime: endTime,
-      actualDuration: actualDuration,
       calculatedAmount: calculatedAmount,
       finalAmount: finalAmount,
       adjustmentReason: adjustmentReason,
     );
+
+    final actualDuration = completedSession.actualDuration;
 
     setState(() {
       completedSessions.add(completedSession);
@@ -497,12 +438,12 @@ class _HomeScreenState extends State<HomeScreen> {
     // تثبيت وقت النهاية عند الضغط على "إنهاء الجلسة".
     final endTime = DateTime.now();
 
-    final elapsed = endTime.difference(session.startTime);
+    final actualDuration = calculateElapsedDuration(
+      startTime: session.startTime,
+      endTime: endTime,
+    );
 
-    final actualDuration =
-        elapsed.isNegative ? Duration.zero : elapsed;
-
-    final calculatedAmount = calculateSessionAmount(
+    final calculatedAmount = calculateSessionCharge(
       session,
       actualDuration,
     );
