@@ -4,7 +4,7 @@
 
 - **ID:** `001`
 - **Title:** `Restore Flutter test baseline`
-- **Status:** `proposed`
+- **Status:** `in_progress`
 - **Date:** `2026-10-13`
 - **Owner:** `Codex`
 - **Approver:** `Repository owner`
@@ -350,6 +350,7 @@ test files. No database or external-service recovery is required.
 | `2026-10-13` | Keep the adjustment reason optional and eventually record the responsible operator and collection timestamp. | These are approved requirements, but current identity/audit infrastructure is absent. | `approved policy; proposed follow-up implementation` |
 | `2026-10-13` | Extract stateless billing/completion functions and a completion value type, while leaving UI/state ownership intact. | This is the smallest boundary that enables direct deterministic coverage without a dependency or project-wide architecture change. | `proposed; implementation approval required` |
 | `2026-10-13` | Use black-box widget tests for session transitions and Flutter-controlled time for timer displays. | Private state should not be exposed solely for tests, and real waits would be nondeterministic. | `proposed` |
+| `2026-10-13` | Add an optional clock callback to `PlayStationApp` and `HomeScreen`, default it to `DateTime.now`, and use it for session start, elapsed-time, and end-dialog timestamps. | Direct `DateTime.now()` does not advance with `WidgetTester.pump`; the minimal seam keeps production behavior unchanged while Step 5 timer tests use synchronized deterministic time. | `explicitly approved by repository owner for Step 5` |
 | `2026-10-13` | Do not add passing tests for role enforcement, responsible-operator capture, distinct collection timestamp, or cash-report consumption yet. | Those approved requirements are not implemented and depend on unresolved authentication/audit/reporting design; tests must remain truthful. | `proposed follow-up` |
 | `2026-10-13` | Treat controller-count mismatch, initially unavailable PlayStation 2, timed extension/overtime operations, missing history UI, and global RTL/localization as existing issues outside this baseline. | Fixing them would change behavior or broaden scope beyond testing restoration. | `proposed non-goals` |
 

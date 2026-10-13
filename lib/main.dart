@@ -13,7 +13,9 @@ void main() {
 }
 
 class PlayStationApp extends StatelessWidget {
-  const PlayStationApp({super.key});
+  const PlayStationApp({super.key, this.clock});
+
+  final DateTime Function()? clock;
 
   @override
   Widget build(BuildContext context) {
@@ -26,13 +28,15 @@ class PlayStationApp extends StatelessWidget {
         ),
         useMaterial3: true,
       ),
-      home: const HomeScreen(),
+      home: HomeScreen(clock: clock),
     );
   }
 }
 
 class HomeScreen extends StatefulWidget {
-  const HomeScreen({super.key});
+  const HomeScreen({super.key, this.clock});
+
+  final DateTime Function()? clock;
 
   @override
   State<HomeScreen> createState() => _HomeScreenState();
@@ -84,6 +88,8 @@ class _HomeScreenState extends State<HomeScreen> {
 
   Timer? _timer;
 
+  DateTime now() => widget.clock?.call() ?? DateTime.now();
+
   @override
   void initState() {
     super.initState();
@@ -128,7 +134,7 @@ class _HomeScreenState extends State<HomeScreen> {
   Duration getElapsedTime(SessionModel session) {
     return calculateElapsedDuration(
       startTime: session.startTime,
-      endTime: DateTime.now(),
+      endTime: now(),
     );
   }
 
@@ -155,7 +161,7 @@ class _HomeScreenState extends State<HomeScreen> {
         playstationId: playstation.id,
         playersCount: playersCount,
         hourlyPrice: hourlyPrice,
-        startTime: DateTime.now(),
+        startTime: now(),
         type: type,
         duration: duration,
       );
@@ -436,7 +442,7 @@ class _HomeScreenState extends State<HomeScreen> {
     final playstation = playstations[index];
 
     // تثبيت وقت النهاية عند الضغط على "إنهاء الجلسة".
-    final endTime = DateTime.now();
+    final endTime = now();
 
     final actualDuration = calculateElapsedDuration(
       startTime: session.startTime,
